@@ -1,0 +1,11 @@
+emp_id,emp_name,department,salary,experience_years,city,performance_rating
+101,John Doe,Engineering,85000,5,New York,Excellent
+102,Jane Smith,Human Resources,52000,3,Chicago,Good
+103,Mike Johnson,Engineering,92000,7,San Francisco,Outstanding
+104,Emily Brown,Marketing,61000,4,New York,Good
+105,Robert Lee,Finance,74000,6,Boston,Excellent
+106,Sarah Wilson,Human Resources,48000,2,Austin,Average
+107,David Clark,Engineering,68000,3,Seattle,Good
+108,Sophia Martinez,Finance,89000,8,Chicago,Outstanding
+109,James Taylor,Marketing,55000,2,Boston,Average
+110,Olivia Anderson,Engineering,105000,10,San Francisco,Outstanding
