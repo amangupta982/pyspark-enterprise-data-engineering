@@ -1,0 +1,6 @@
+emp_id,emp_name,department,salary,experience_years,city,performance_rating
+101,John Doe,Engineering,85000,5,New York,Excellent
+103,Mike Johnson,Engineering,92000,7,San Francisco,Outstanding
+105,Robert Lee,Finance,74000,6,Boston,Excellent
+108,Sophia Martinez,Finance,89000,8,Chicago,Outstanding
+110,Olivia Anderson,Engineering,105000,10,San Francisco,Outstanding
