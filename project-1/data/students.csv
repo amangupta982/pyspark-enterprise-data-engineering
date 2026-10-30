@@ -1,0 +1,9 @@
+student_id,name,course,semester,marks,grade,attendance_pct
+S101,Aarav Sharma,Computer Science,4,88.5,A,92.0
+S102,Diya Patel,Information Technology,4,74.0,B,85.5
+S103,Rohan Verma,Computer Science,6,93.0,A+,96.0
+S104,Ananya Iyer,Data Science,2,62.5,C,78.0
+S105,Kabir Singh,Mechanical,4,81.0,A,88.0
+S106,Meera Nair,Data Science,2,95.5,A+,98.5
+S107,Vikram Malhotra,Computer Science,6,58.0,D,65.0
+S108,Sneha Reddy,Information Technology,4,84.5,A,91.0
