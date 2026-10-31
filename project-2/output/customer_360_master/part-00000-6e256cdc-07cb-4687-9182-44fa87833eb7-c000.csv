@@ -1,0 +1,7 @@
+golden_customer_id,master_name,norm_email,norm_phone,loyalty_tier,total_lifetime_spend,total_transactions,avg_order_value,last_order_date,payment_success_rate_pct,preferred_shopping_channel,total_support_tickets,open_support_tickets,avg_csat_score,total_web_pageviews,total_web_time_secs,last_web_active_date,total_app_sessions,total_app_screen_time_mins,last_app_open_date,is_omnichannel,customer_360_segment
+CUST-GOLD-1,Alice Johnson,alice.johnson@gmail.com,5550101,Gold,1204.99,4,301.25,2024-03-12,75.0,Web,2,0,4.5,32,1610,2024-04-05,1,45.5,2024-04-06,true,💎 High-Value VIP
+CUST-GOLD-2,Bob Smith,bob.smith@techcorp.io,5550202,Silver,335.0,2,167.5,2024-03-18,100.0,Store,1,0,4.0,8,430,2024-03-15,1,18.0,2024-03-20,true,⭐ Standard Active
+CUST-GOLD-3,Charles Brown,charlie.brown@yahoo.com,5550303,Platinum,439.5,2,219.75,2024-03-25,100.0,Mobile App,1,0,5.0,22,1150,2024-03-20,1,62.0,2024-04-08,true,📱 Digital Engaged Explorer
+CUST-GOLD-4,David Wilson,david.w@outlook.com,5550404,Bronze,120.0,1,120.0,2024-02-20,100.0,Web,1,1,3.0,5,210,2024-03-22,0,0.0,,false,⚠️ At-Risk / Needs Attention
+CUST-GOLD-5,Emma Davis,emma.davis@icloud.com,5550505,Gold,515.0,2,257.5,2024-04-02,100.0,Store,0,0,5.0,12,640,2024-03-25,1,34.0,2024-04-02,true,💎 High-Value VIP
+CUST-GOLD-6,Frank Miller,frank.miller@gmail.com,5550606,Bronze,35.0,1,35.0,2024-03-28,100.0,Store,1,1,2.0,4,180,2024-04-01,0,0.0,,false,⚠️ At-Risk / Needs Attention
