@@ -1,0 +1,13 @@
+txn_id,customer_identifier,order_date,product_name,category,amount,channel
+TXN1001,alice.johnson@gmail.com,2024-01-15,4K Smart TV,Electronics,799.99,Web
+TXN1002,CRM002,2024-01-18,Ergonomic Chair,Furniture,250.00,Store
+TXN1003,charlie.brown@yahoo.com,2024-02-01,Wireless Noise Cancelling Headphones,Electronics,299.50,Mobile App
+TXN1004,alice.johnson@gmail.com,2024-02-14,Soundbar,Electronics,180.00,Web
+TXN1005,david.w@outlook.com,2024-02-20,Coffee Machine,Appliances,120.00,Web
+TXN1006,emma.davis@icloud.com,2024-03-05,Standing Desk,Furniture,450.00,Store
+TXN1007,CRM001,2024-03-12,HDMI Cables & Accessories,Electronics,45.00,Mobile App
+TXN1008,bob.smith@techcorp.io,2024-03-18,Monitor Arm,Furniture,85.00,Web
+TXN1009,diana.prince@gmail.com,2024-03-22,Blender Pro,Appliances,110.00,Web
+TXN1010,charlie.brown@yahoo.com,2024-03-25,Mechanical Keyboard,Electronics,140.00,Mobile App
+TXN1011,frank.miller@gmail.com,2024-03-28,USB-C Hub,Electronics,35.00,Store
+TXN1012,emma.davis@icloud.com,2024-04-02,Desk Mat & Lamp,Furniture,65.00,Web
