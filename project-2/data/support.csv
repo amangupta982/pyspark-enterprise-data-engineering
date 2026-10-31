@@ -1,0 +1,8 @@
+ticket_id,contact_email,contact_phone,issue_category,status,priority,csat_score,created_date
+TCK301,alice.johnson@gmail.com,+1-555-0101,Shipping Delay,Resolved,High,5,2024-01-20
+TCK302,bob.smith@techcorp.io,+1-555-0202,Assembly Question,Resolved,Medium,4,2024-01-22
+TCK303,charlie.brown@yahoo.com,+1-555-0303,Defective Cable,Resolved,High,5,2024-02-05
+TCK304,alice.j@workmail.com,+1-555-0101,Invoice Copy Request,Resolved,Low,4,2024-02-18
+TCK305,david.w@outlook.com,+1-555-0404,Warranty Inquiry,Open,Medium,3,2024-02-25
+TCK306,diana.prince@gmail.com,+1-555-0707,Return Request,Resolved,High,4,2024-03-26
+TCK307,frank.miller@gmail.com,+1-555-0606,Account Login,Open,Low,2,2024-04-01
