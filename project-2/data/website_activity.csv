@@ -1,0 +1,9 @@
+session_id,visitor_id,user_email,device_type,page_views,time_spent_secs,landing_page,last_active_date
+WEB4001,VIS_A101,alice.johnson@gmail.com,Desktop,14,720,/products/electronics,2024-03-10
+WEB4002,VIS_B202,bob.smith@techcorp.io,Laptop,8,430,/categories/furniture,2024-03-15
+WEB4003,VIS_C303,charlie.brown@yahoo.com,Mobile,22,1150,/deals/spring-sale,2024-03-20
+WEB4004,VIS_D404,david.w@outlook.com,Desktop,5,210,/support/faq,2024-03-22
+WEB4005,VIS_E505,emma.davis@icloud.com,Tablet,12,640,/home,2024-03-25
+WEB4006,VIS_F606,diana.prince@gmail.com,Mobile,9,390,/products/appliances,2024-03-26
+WEB4007,VIS_G707,frank.miller@gmail.com,Desktop,4,180,/login,2024-04-01
+WEB4008,VIS_A101,alice.johnson@gmail.com,Laptop,18,890,/account/orders,2024-04-05

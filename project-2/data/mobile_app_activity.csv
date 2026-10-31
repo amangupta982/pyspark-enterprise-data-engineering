@@ -1,0 +1,7 @@
+app_session_id,device_id,user_phone,app_version,screen_time_mins,features_used,notifications_enabled,last_app_open
+MOB5001,DEV_APPLE_01,+1-555-0101,v3.2.1,45.5,Catalog|Wishlist|Checkout,true,2024-04-06
+MOB5002,DEV_SAMS_02,+1-555-0202,v3.1.8,18.0,OrderTracking,false,2024-03-20
+MOB5003,DEV_APPLE_03,+1-555-0303,v3.2.1,62.0,LiveChat|Checkout|Deals,true,2024-04-08
+MOB5004,DEV_PIXEL_04,+1-555-0505,v3.2.0,34.0,StoreLocator|Catalog,true,2024-04-02
+MOB5005,DEV_APPLE_05,+1-555-0707,v3.2.1,28.5,Wishlist|Reviews,true,2024-03-28
+MOB5006,DEV_XIAOMI_06,+1-555-0808,v3.0.4,12.0,Catalog,false,2024-02-15
