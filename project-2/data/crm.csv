@@ -1,0 +1,7 @@
+crm_id,first_name,last_name,email,phone,signup_date,loyalty_tier
+CRM001,Alice,Johnson,alice.johnson@gmail.com,+1-555-0101,2022-03-10,Gold
+CRM002,Bob,Smith,bob.smith@techcorp.io,+1-555-0202,2023-01-15,Silver
+CRM003,Charles,Brown,charlie.brown@yahoo.com,+1-555-0303,2021-11-20,Platinum
+CRM004,David,Wilson,david.w@outlook.com,+1-555-0404,2023-05-18,Bronze
+CRM005,Emma,Davis,emma.davis@icloud.com,+1-555-0505,2022-09-01,Gold
+CRM006,Frank,Miller,frank.miller@gmail.com,+1-555-0606,2023-10-12,Bronze
