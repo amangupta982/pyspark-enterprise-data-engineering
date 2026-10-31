@@ -10,7 +10,23 @@ Problem Statement:
 
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lower, trim, regexp_replace, concat, lit
+from pyspark.sql.functions import (
+    col,
+    lower,
+    trim,
+    regexp_replace,
+    concat,
+    lit,
+    round,
+    sum as _sum,
+    count,
+    avg,
+    max as _max,
+    when,
+    desc,
+    row_number,
+)
+from pyspark.sql.window import Window
 
 
 def create_spark_session() -> SparkSession:
@@ -44,7 +60,7 @@ def normalize_phone_col(column_name: str):
 
 def main():
     print_banner("41. ENTERPRISE CUSTOMER 360 PIPELINE (23BTRDC002 - 17/08/2026)")
-    print("Objective: Ingest multi-source channels and standardize customer identifiers.\n")
+    print("Objective: Ingest multi-source channels, resolve identities, and compute financial metrics.\n")
 
     spark = create_spark_session()
     spark.sparkContext.setLogLevel("ERROR")
@@ -64,13 +80,6 @@ def main():
     web_raw = spark.read.option("header", "true").csv(os.path.join(data_dir, "website_activity.csv"))
     mob_raw = spark.read.option("header", "true").csv(os.path.join(data_dir, "mobile_app_activity.csv"))
 
-    print(f" Loaded CRM records:             {crm_raw.count()}")
-    print(f" Loaded Transactions:            {txn_raw.count()}")
-    print(f" Loaded Payments:                {pay_raw.count()}")
-    print(f" Loaded Support Tickets:         {sup_raw.count()}")
-    print(f" Loaded Website Sessions:        {web_raw.count()}")
-    print(f" Loaded Mobile App Sessions:     {mob_raw.count()}")
-
     # -------------------------------------------------------------------------
     # STEP 2: Standardize Identifiers (Emails & Phone Numbers)
     # -------------------------------------------------------------------------
@@ -89,7 +98,89 @@ def main():
     web_clean = web_raw.withColumn("norm_email", lower(trim(col("user_email"))))
     mob_clean = mob_raw.withColumn("norm_phone", normalize_phone_col("user_phone"))
 
-    print("✅ Identifiers standardized (case-insensitive emails, canonical 10-digit phones).")
+    txn_clean = txn_raw.withColumn(
+        "norm_identifier", lower(trim(col("customer_identifier")))
+    ).withColumn("amount", col("amount").cast("double"))
+
+    pay_clean = pay_raw.withColumn("amount", col("amount").cast("double"))
+
+    # -------------------------------------------------------------------------
+    # STEP 3: Identity Resolution (Golden Customer Registry)
+    # -------------------------------------------------------------------------
+    print_step(3, "Identity Resolution & Conflict Resolution Engine")
+
+    crm_identities = crm_clean.select(
+        col("crm_id"),
+        col("norm_email"),
+        col("norm_phone"),
+        col("full_name").alias("master_name"),
+        col("loyalty_tier"),
+        lit("CRM").alias("identity_source"),
+    )
+
+    golden_window = Window.orderBy("crm_id")
+    golden_registry = (
+        crm_identities.withColumn(
+            "row_num", row_number().over(golden_window)
+        )
+        .withColumn(
+            "golden_customer_id",
+            concat(lit("CUST-GOLD-"), col("row_num").cast("string")),
+        )
+        .drop("row_num")
+    )
+
+    print("--- Resolved Golden Customer Master Registry ---")
+    golden_registry.select(
+        "golden_customer_id",
+        "master_name",
+        "norm_email",
+        "norm_phone",
+        "loyalty_tier",
+    ).show(truncate=False)
+
+    # -------------------------------------------------------------------------
+    # STEP 4: Link Transactions & Payments to Golden Customer ID
+    # -------------------------------------------------------------------------
+    print_step(4, "Linking Transactions & Payment Analytics to Golden Records")
+
+    txn_with_golden = (
+        txn_clean.join(
+            golden_registry,
+            (txn_clean.norm_identifier == golden_registry.norm_email)
+            | (txn_clean.norm_identifier == lower(golden_registry.crm_id)),
+            "inner",
+        )
+        .select(
+            col("txn_id"),
+            col("golden_customer_id"),
+            col("order_date"),
+            col("product_name"),
+            col("category"),
+            col("amount"),
+            col("channel"),
+        )
+    )
+
+    txn_pay_joined = txn_with_golden.join(pay_clean, "txn_id", "left")
+
+    financial_kpis = txn_pay_joined.groupBy("golden_customer_id").agg(
+        round(_sum(txn_with_golden.amount), 2).alias("total_lifetime_spend"),
+        count("txn_id").alias("total_transactions"),
+        round(avg(txn_with_golden.amount), 2).alias("avg_order_value"),
+        _max("order_date").alias("last_order_date"),
+        round(
+            (
+                count(when(col("payment_status") == "Completed", 1))
+                / count("payment_id")
+            )
+            * 100,
+            1,
+        ).alias("payment_success_rate_pct"),
+    )
+
+    print("--- Financial & Transaction KPIs ---")
+    financial_kpis.show(truncate=False)
 
     spark.stop()
 
