@@ -1,0 +1,3 @@
+Statistic,Point_Estimate,Parametric_95_CI,Bootstrap_95_CI,Parametric_Width,Bootstrap_Width
+Mean Delivery Time,42.91,"[33.51, 52.30]","[34.64, 52.20]",18.79,17.57
+Median Delivery Time,29.80,N/A (No Standard Formula),"[28.00, 32.80]",N/A,4.80
