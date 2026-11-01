@@ -75,7 +75,6 @@ def main():
         5, truncate=False
     )
 
-    # Compute baseline sample statistics
     stats = df.select(
         count("delivery_time_hours").alias("n"),
         avg("delivery_time_hours").alias("sample_mean"),
@@ -94,6 +93,19 @@ def main():
     print(f"Sample Std Dev (s)    : {sample_std:.2f} hours")
     print(f"Standard Error (SE)   : {standard_error:.2f} hours")
     print(f"Sample Median         : {sample_median:.2f} hours")
+
+    # -------------------------------------------------------------------------
+    # STEP 2: Conventional Parametric 95% Confidence Interval for Mean
+    # Formula: Mean ± Z * (s / sqrt(n)), where Z = 1.96 for 95%
+    # -------------------------------------------------------------------------
+    print_section("STEP 2: Compute Conventional Parametric 95% Confidence Interval")
+    z_critical = 1.96
+    param_ci_lower = sample_mean - (z_critical * standard_error)
+    param_ci_upper = sample_mean + (z_critical * standard_error)
+
+    print("Parametric Method (Assumes Normal Distribution):")
+    print(f"  • 95% CI for Mean: [{param_ci_lower:.2f}, {param_ci_upper:.2f}] hours")
+    print("  • Note: No simple parametric formula exists for Median of skewed data.\n")
 
     spark.stop()
 
