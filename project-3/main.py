@@ -107,6 +107,34 @@ def main():
     print(f"  • 95% CI for Mean: [{param_ci_lower:.2f}, {param_ci_upper:.2f}] hours")
     print("  • Note: No simple parametric formula exists for Median of skewed data.\n")
 
+    # -------------------------------------------------------------------------
+    # STEP 3: Distributed Bootstrap Resampling
+    # -------------------------------------------------------------------------
+    NUM_BOOTSTRAP_SAMPLES = 200
+    print_section(
+        f"STEP 3: Execute Distributed Bootstrap Resampling (B = {NUM_BOOTSTRAP_SAMPLES} Iterations)"
+    )
+
+    bootstrap_estimates = []
+    print(f"Resampling with replacement across {NUM_BOOTSTRAP_SAMPLES} iterations...")
+
+    for i in range(NUM_BOOTSTRAP_SAMPLES):
+        bootstrap_sample = df.sample(withReplacement=True, fraction=1.0, seed=100 + i)
+
+        b_stats = bootstrap_sample.select(
+            avg("delivery_time_hours").alias("b_mean"),
+            expr("percentile_approx(delivery_time_hours, 0.5)").alias("b_median"),
+        ).collect()[0]
+
+        bootstrap_estimates.append((i + 1, float(b_stats["b_mean"]), float(b_stats["b_median"])))
+
+    boot_df = spark.createDataFrame(
+        bootstrap_estimates, ["bootstrap_iter", "boot_mean", "boot_median"]
+    )
+
+    print("Sample of generated Bootstrap estimates:")
+    boot_df.show(5)
+
     spark.stop()
 
 
