@@ -96,7 +96,6 @@ def main():
 
     # -------------------------------------------------------------------------
     # STEP 2: Conventional Parametric 95% Confidence Interval for Mean
-    # Formula: Mean ± Z * (s / sqrt(n)), where Z = 1.96 for 95%
     # -------------------------------------------------------------------------
     print_section("STEP 2: Compute Conventional Parametric 95% Confidence Interval")
     z_critical = 1.96
@@ -132,8 +131,25 @@ def main():
         bootstrap_estimates, ["bootstrap_iter", "boot_mean", "boot_median"]
     )
 
-    print("Sample of generated Bootstrap estimates:")
-    boot_df.show(5)
+    # -------------------------------------------------------------------------
+    # STEP 4: Estimate Empirical Bootstrap 95% Confidence Intervals
+    # -------------------------------------------------------------------------
+    print_section("STEP 4: Calculate Empirical Bootstrap 95% Confidence Intervals")
+
+    ci_stats = boot_df.select(
+        expr("percentile_approx(boot_mean, 0.025)").alias("boot_mean_ci_lower"),
+        expr("percentile_approx(boot_mean, 0.975)").alias("boot_mean_ci_upper"),
+        expr("percentile_approx(boot_median, 0.025)").alias("boot_median_ci_lower"),
+        expr("percentile_approx(boot_median, 0.975)").alias("boot_median_ci_upper"),
+    ).collect()[0]
+
+    boot_mean_lower = ci_stats["boot_mean_ci_lower"]
+    boot_mean_upper = ci_stats["boot_mean_ci_upper"]
+    boot_med_lower = ci_stats["boot_median_ci_lower"]
+    boot_med_upper = ci_stats["boot_median_ci_upper"]
+
+    print(f"Bootstrap 95% CI for Mean  : [{boot_mean_lower:.2f}, {boot_mean_upper:.2f}]")
+    print(f"Bootstrap 95% CI for Median: [{boot_med_lower:.2f}, {boot_med_upper:.2f}]")
 
     spark.stop()
 
