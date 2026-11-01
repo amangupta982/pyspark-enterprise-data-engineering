@@ -69,12 +69,6 @@ def main():
         .cache()
     )
 
-    print(f"Loaded records count: {df.count()}")
-    print("\nSample Preview (Delivery Times in Hours):")
-    df.select("order_id", "delivery_time_hours", "carrier", "package_weight_kg").show(
-        5, truncate=False
-    )
-
     stats = df.select(
         count("delivery_time_hours").alias("n"),
         avg("delivery_time_hours").alias("sample_mean"),
@@ -88,12 +82,6 @@ def main():
     sample_median = stats["sample_median"]
     standard_error = sample_std / math.sqrt(n)
 
-    print(f"Sample Size (n)       : {n}")
-    print(f"Sample Mean (x̄)       : {sample_mean:.2f} hours")
-    print(f"Sample Std Dev (s)    : {sample_std:.2f} hours")
-    print(f"Standard Error (SE)   : {standard_error:.2f} hours")
-    print(f"Sample Median         : {sample_median:.2f} hours")
-
     # -------------------------------------------------------------------------
     # STEP 2: Conventional Parametric 95% Confidence Interval for Mean
     # -------------------------------------------------------------------------
@@ -101,10 +89,6 @@ def main():
     z_critical = 1.96
     param_ci_lower = sample_mean - (z_critical * standard_error)
     param_ci_upper = sample_mean + (z_critical * standard_error)
-
-    print("Parametric Method (Assumes Normal Distribution):")
-    print(f"  • 95% CI for Mean: [{param_ci_lower:.2f}, {param_ci_upper:.2f}] hours")
-    print("  • Note: No simple parametric formula exists for Median of skewed data.\n")
 
     # -------------------------------------------------------------------------
     # STEP 3: Distributed Bootstrap Resampling
@@ -115,8 +99,6 @@ def main():
     )
 
     bootstrap_estimates = []
-    print(f"Resampling with replacement across {NUM_BOOTSTRAP_SAMPLES} iterations...")
-
     for i in range(NUM_BOOTSTRAP_SAMPLES):
         bootstrap_sample = df.sample(withReplacement=True, fraction=1.0, seed=100 + i)
 
@@ -148,8 +130,40 @@ def main():
     boot_med_lower = ci_stats["boot_median_ci_lower"]
     boot_med_upper = ci_stats["boot_median_ci_upper"]
 
-    print(f"Bootstrap 95% CI for Mean  : [{boot_mean_lower:.2f}, {boot_mean_upper:.2f}]")
-    print(f"Bootstrap 95% CI for Median: [{boot_med_lower:.2f}, {boot_med_upper:.2f}]")
+    # -------------------------------------------------------------------------
+    # STEP 5: Side-by-Side Comparison
+    # -------------------------------------------------------------------------
+    print_section("STEP 5: Comparison - Parametric vs. Bootstrap Confidence Intervals")
+
+    comparison_data = [
+        (
+            "Mean Delivery Time",
+            f"{sample_mean:.2f}",
+            f"[{param_ci_lower:.2f}, {param_ci_upper:.2f}]",
+            f"[{boot_mean_lower:.2f}, {boot_mean_upper:.2f}]",
+            f"{param_ci_upper - param_ci_lower:.2f}",
+            f"{boot_mean_upper - boot_mean_lower:.2f}",
+        ),
+        (
+            "Median Delivery Time",
+            f"{sample_median:.2f}",
+            "N/A (No Standard Formula)",
+            f"[{boot_med_lower:.2f}, {boot_med_upper:.2f}]",
+            "N/A",
+            f"{boot_med_upper - boot_med_lower:.2f}",
+        ),
+    ]
+
+    columns = [
+        "Statistic",
+        "Point_Estimate",
+        "Parametric_95_CI",
+        "Bootstrap_95_CI",
+        "Parametric_Width",
+        "Bootstrap_Width",
+    ]
+    comparison_df = spark.createDataFrame(comparison_data, columns)
+    comparison_df.show(truncate=False)
 
     spark.stop()
 
