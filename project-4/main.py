@@ -14,7 +14,7 @@ Aim & Problem Statement:
 
 import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, concat, lit, count
 
 
 def create_spark_session() -> SparkSession:
@@ -60,15 +60,6 @@ def main():
     vertices = spark.read.option("header", "true").csv(v_path)
     edges = spark.read.option("header", "true").csv(e_path)
 
-    print(f"Total Graph Entities (Vertices): {vertices.count()}")
-    print(f"Total Semantic Relations (Edges): {edges.count()}\n")
-
-    print("--- Graph Vertices (Entity Ontology) ---")
-    vertices.show(truncate=False)
-
-    print("--- Graph Edges (Semantic Triples: Subject - Predicate - Object) ---")
-    edges.show(truncate=False)
-
     # -------------------------------------------------------------------------
     # STEP 2: 1-Hop Direct Semantic Traversal
     # -------------------------------------------------------------------------
@@ -87,8 +78,103 @@ def main():
         )
     )
 
-    print("Sample 1-Hop Semantic Connections:")
-    triplets_1hop.show(8, truncate=False)
+    # -------------------------------------------------------------------------
+    # STEP 3: 2-Hop Multi-Hop Path Traversal
+    # Pattern: (A) -[R1]-> (B) -[R2]-> (C)
+    # -------------------------------------------------------------------------
+    print_step(3, "2-Hop Multi-Hop Relational Traversal: (A) -[R1]-> (B) -[R2]-> (C)")
+
+    e1 = edges.alias("e1")
+    e2 = edges.alias("e2")
+    v1 = vertices.alias("v1")
+    v2 = vertices.alias("v2")
+    v3 = vertices.alias("v3")
+
+    hop2_df = (
+        e1.join(e2, col("e1.dst") == col("e2.src"), "inner")
+        .join(v1, col("e1.src") == col("v1.id"), "inner")
+        .join(v2, col("e1.dst") == col("v2.id"), "inner")
+        .join(v3, col("e2.dst") == col("v3.id"), "inner")
+        .select(
+            col("v1.name").alias("start_entity"),
+            col("v1.entity_type").alias("start_type"),
+            col("e1.relationship").alias("rel_1"),
+            col("v2.name").alias("intermediate_entity"),
+            col("v2.entity_type").alias("intermediate_type"),
+            col("e2.relationship").alias("rel_2"),
+            col("v3.name").alias("end_entity"),
+            col("v3.entity_type").alias("end_type"),
+        )
+        .withColumn(
+            "traversal_path",
+            concat(
+                col("start_entity"),
+                lit(" -> ["),
+                col("rel_1"),
+                lit("] -> "),
+                col("intermediate_entity"),
+                lit(" -> ["),
+                col("rel_2"),
+                lit("] -> "),
+                col("end_entity"),
+            ),
+        )
+    )
+
+    print("Discovered 2-Hop Knowledge Paths:")
+    hop2_df.select("start_entity", "end_entity", "traversal_path").show(
+        8, truncate=False
+    )
+
+    # -------------------------------------------------------------------------
+    # STEP 4: 3-Hop Deep Traversal: (A) -> (B) -> (C) -> (D)
+    # -------------------------------------------------------------------------
+    print_step(4, "3-Hop Deep Graph Traversal: (A) -> (B) -> (C) -> (D)")
+
+    e3 = edges.alias("e3")
+    v4 = vertices.alias("v4")
+
+    hop3_df = (
+        e1.join(e2, col("e1.dst") == col("e2.src"), "inner")
+        .join(e3, col("e2.dst") == col("e3.src"), "inner")
+        .join(v1, col("e1.src") == col("v1.id"), "inner")
+        .join(v2, col("e1.dst") == col("v2.id"), "inner")
+        .join(v3, col("e2.dst") == col("v3.id"), "inner")
+        .join(v4, col("e3.dst") == col("v4.id"), "inner")
+        .select(
+            col("v1.name").alias("origin"),
+            col("v4.name").alias("destination"),
+            concat(
+                col("v1.name"),
+                lit(" -["),
+                col("e1.relationship"),
+                lit("]-> "),
+                col("v2.name"),
+                lit(" -["),
+                col("e2.relationship"),
+                lit("]-> "),
+                col("v3.name"),
+                lit(" -["),
+                col("e3.relationship"),
+                lit("]-> "),
+                col("v4.name"),
+            ).alias("deep_semantic_path"),
+        )
+    )
+
+    print("Discovered 3-Hop Knowledge Paths:")
+    hop3_df.show(truncate=False)
+
+    # -------------------------------------------------------------------------
+    # STEP 5: Heterogeneous Entity Path Analysis
+    # -------------------------------------------------------------------------
+    print_step(5, "Heterogeneous Entity Path Analysis Across Types")
+
+    cross_type_paths = hop2_df.groupBy("start_type", "intermediate_type", "end_type").agg(
+        count("*").alias("path_count")
+    )
+    print("Semantic Meta-Paths Summary:")
+    cross_type_paths.show(truncate=False)
 
     spark.stop()
 
