@@ -1,0 +1,10 @@
+start_entity,start_type,rel_1,intermediate_entity,intermediate_type,rel_2,end_entity,end_type,traversal_path
+Geoffrey Hinton,Person,CO_DEVELOPED,Backpropagation,Algorithm,FOUNDATION_OF,Deep Learning,Field,Geoffrey Hinton -> [CO_DEVELOPED] -> Backpropagation -> [FOUNDATION_OF] -> Deep Learning
+Yann LeCun,Person,PIONEERED,Convolutional Neural Network,Architecture,SUBFIELD_OF,Deep Learning,Field,Yann LeCun -> [PIONEERED] -> Convolutional Neural Network -> [SUBFIELD_OF] -> Deep Learning
+Yann LeCun,Person,WORKS_AT,Meta AI,Organization,DEVELOPED,PyTorch,Software Framework,Yann LeCun -> [WORKS_AT] -> Meta AI -> [DEVELOPED] -> PyTorch
+Meta AI,Organization,DEVELOPED,PyTorch,Software Framework,IMPLEMENTS,Deep Learning,Field,Meta AI -> [DEVELOPED] -> PyTorch -> [IMPLEMENTS] -> Deep Learning
+Vaswani et al,Person,PROPOSED,Transformer Architecture,Architecture,PILLAR_OF,Deep Learning,Field,Vaswani et al -> [PROPOSED] -> Transformer Architecture -> [PILLAR_OF] -> Deep Learning
+Vaswani et al,Person,PROPOSED,Transformer Architecture,Architecture,UTILIZES,Attention Mechanism,Mechanism,Vaswani et al -> [PROPOSED] -> Transformer Architecture -> [UTILIZES] -> Attention Mechanism
+Google DeepMind,Organization,BUILT,AlphaFold,AI System,POWERED_BY,Transformer Architecture,Architecture,Google DeepMind -> [BUILT] -> AlphaFold -> [POWERED_BY] -> Transformer Architecture
+AlphaFold,AI System,POWERED_BY,Transformer Architecture,Architecture,PILLAR_OF,Deep Learning,Field,AlphaFold -> [POWERED_BY] -> Transformer Architecture -> [PILLAR_OF] -> Deep Learning
+AlphaFold,AI System,POWERED_BY,Transformer Architecture,Architecture,UTILIZES,Attention Mechanism,Mechanism,AlphaFold -> [POWERED_BY] -> Transformer Architecture -> [UTILIZES] -> Attention Mechanism
