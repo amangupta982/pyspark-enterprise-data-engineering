@@ -1,0 +1,15 @@
+id,name,entity_type,domain
+E1,Alan Turing,Person,Theoretical Computer Science
+E2,Turing Machine,Concept,Computation Theory
+E3,Geoffrey Hinton,Person,Artificial Intelligence
+E4,Backpropagation,Algorithm,Machine Learning
+E5,Deep Learning,Field,Artificial Intelligence
+E6,Convolutional Neural Network,Architecture,Computer Vision
+E7,Yann LeCun,Person,Computer Vision & AI
+E8,PyTorch,Software Framework,Open Source Tooling
+E9,Meta AI,Organization,Industry AI Lab
+E10,Google DeepMind,Organization,Industry AI Lab
+E11,AlphaFold,AI System,Computational Biology
+E12,Transformer Architecture,Architecture,Natural Language Processing
+E13,Vaswani et al,Person,AI Research
+E14,Attention Mechanism,Mechanism,Deep Learning
