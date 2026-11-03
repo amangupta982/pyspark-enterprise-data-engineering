@@ -1,0 +1,6 @@
+txn_id,customer_id,amount,merchant_category,distance_from_home_km,online_order,txns_last_24h,avg_amount_30d
+LIVE_901,C101,38.00,Grocery,2.1,0,1,50.00
+LIVE_902,C102,1850.00,Jewelry,650.0,1,9,110.00
+LIVE_903,C104,22.50,Dining,1.0,0,2,25.00
+LIVE_904,C106,3400.00,Electronics,1200.0,1,13,20.00
+LIVE_905,C108,72.00,Clothing,4.8,0,1,70.00
