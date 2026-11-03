@@ -25,7 +25,7 @@ os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, round as _round
 
 
 def create_spark_session() -> SparkSession:
@@ -101,7 +101,33 @@ def main():
     )
 
     print(f"Loaded Bronze historical training transactions: {bronze_train.count()} records")
-    bronze_train.show(5, truncate=False)
+
+    # -------------------------------------------------------------------------
+    # STEP 2: Spark Preprocessing & Feature Engineering (Silver Layer)
+    # -------------------------------------------------------------------------
+    print_step(2, "Feature Engineering & Silver Layer Transformation")
+
+    silver_df = (
+        bronze_train.withColumn(
+            "amount_to_avg_ratio",
+            _round(col("amount") / col("avg_amount_30d"), 2),
+        )
+        .withColumn(
+            "velocity_risk_score",
+            _round(col("txns_last_24h") * (col("distance_from_home_km") / 100.0), 2),
+        )
+    )
+
+    print("Engineered Behavioral Feature Samples (Silver Layer):")
+    silver_df.select(
+        "txn_id",
+        "amount",
+        "avg_amount_30d",
+        "amount_to_avg_ratio",
+        "distance_from_home_km",
+        "velocity_risk_score",
+        "is_fraud",
+    ).show(5, truncate=False)
 
     spark.stop()
 
