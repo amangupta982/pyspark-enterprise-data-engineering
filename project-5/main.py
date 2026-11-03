@@ -27,8 +27,10 @@ os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, round as _round
 from pyspark.ml import Pipeline
+from pyspark.ml.functions import vector_to_array
 from pyspark.ml.feature import StringIndexer, VectorAssembler, StandardScaler
 from pyspark.ml.classification import RandomForestClassifier
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
 
 def create_spark_session() -> SparkSession:
@@ -156,7 +158,34 @@ def main():
     )
 
     pipeline = Pipeline(stages=[indexer, assembler, scaler, rf_classifier])
-    print("✅ Pipeline Stages defined: StringIndexer -> VectorAssembler -> StandardScaler -> RandomForest")
+
+    # -------------------------------------------------------------------------
+    # STEP 4: Model Training & Evaluation
+    # -------------------------------------------------------------------------
+    print_step(4, "Model Training & Performance Evaluation")
+
+    train_data, test_data = silver_df.randomSplit([0.8, 0.2], seed=42)
+    print(f"Training Partition Size: {train_data.count()} | Test Partition Size: {test_data.count()}")
+
+    trained_model = pipeline.fit(train_data)
+    test_predictions = trained_model.transform(test_data)
+
+    evaluator = BinaryClassificationEvaluator(
+        labelCol="is_fraud",
+        rawPredictionCol="rawPrediction",
+        metricName="areaUnderROC",
+    )
+    roc_auc = evaluator.evaluate(test_predictions)
+    print(f"\n🎯 Model Evaluation Metric - ROC AUC: {roc_auc:.4f}")
+
+    print("\nSample Test Set Predictions & Probabilities:")
+    test_eval_view = test_predictions.withColumn(
+        "fraud_probability", _round(vector_to_array(col("probability"))[1], 4)
+    )
+
+    test_eval_view.select(
+        "txn_id", "amount", "is_fraud", "prediction", "fraud_probability"
+    ).show(truncate=False)
 
     spark.stop()
 
