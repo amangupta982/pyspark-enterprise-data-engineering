@@ -26,6 +26,9 @@ os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, round as _round
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import StringIndexer, VectorAssembler, StandardScaler
+from pyspark.ml.classification import RandomForestClassifier
 
 
 def create_spark_session() -> SparkSession:
@@ -118,16 +121,42 @@ def main():
         )
     )
 
-    print("Engineered Behavioral Feature Samples (Silver Layer):")
-    silver_df.select(
-        "txn_id",
+    # -------------------------------------------------------------------------
+    # STEP 3: Distributed MLlib Pipeline Setup
+    # -------------------------------------------------------------------------
+    print_step(3, "Configuring Distributed PySpark ML Pipeline")
+
+    indexer = StringIndexer(
+        inputCol="merchant_category",
+        outputCol="merchant_cat_index",
+        handleInvalid="keep",
+    )
+
+    feature_cols = [
         "amount",
-        "avg_amount_30d",
-        "amount_to_avg_ratio",
+        "merchant_cat_index",
         "distance_from_home_km",
+        "online_order",
+        "txns_last_24h",
+        "amount_to_avg_ratio",
         "velocity_risk_score",
-        "is_fraud",
-    ).show(5, truncate=False)
+    ]
+    assembler = VectorAssembler(inputCols=feature_cols, outputCol="raw_features")
+
+    scaler = StandardScaler(
+        inputCol="raw_features", outputCol="features", withStd=True, withMean=True
+    )
+
+    rf_classifier = RandomForestClassifier(
+        labelCol="is_fraud",
+        featuresCol="features",
+        numTrees=10,
+        maxDepth=5,
+        seed=42,
+    )
+
+    pipeline = Pipeline(stages=[indexer, assembler, scaler, rf_classifier])
+    print("✅ Pipeline Stages defined: StringIndexer -> VectorAssembler -> StandardScaler -> RandomForest")
 
     spark.stop()
 
