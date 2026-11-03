@@ -25,7 +25,15 @@ os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, round as _round
+from pyspark.sql.functions import (
+    col,
+    when,
+    round as _round,
+    count,
+    avg,
+    sum as _sum,
+    lit,
+)
 from pyspark.ml import Pipeline
 from pyspark.ml.functions import vector_to_array
 from pyspark.ml.feature import StringIndexer, VectorAssembler, StandardScaler
@@ -77,6 +85,21 @@ def print_architecture_blueprint():
                                               | Gold Layer: Real-Time Risk Scores  |
                                               | Aggregated Behavioral Feature Store|
                                               +-----------------+------------------+
+                                                                |
+           [ ML PIPELINE & SERVING ]                            |
+  +--------------------------------+                            |
+  | PySpark MLlib Pipeline:        |<---------------------------+
+  | StringIndexer -> Assembler ->  |
+  | Scaler -> RandomForestModel    |
+  +----------------+---------------+
+                   |
+                   v
+  +--------------------------------+          +------------------------------------+
+  | Real-Time Decisioning Engine:  | -------->| Monitoring & Feedback Loop:        |
+  |  - Score < 0.40  => APPROVE    |          |  - Chargebacks Ground Truth Influx |
+  |  - 0.40-0.75     => OTP REVIEW |          |  - Model Drift & PSI Detection     |
+  |  - Score >= 0.75 => DECLINE    |          |  - Automated Retraining Pipeline   |
+  +--------------------------------+          +------------------------------------+
 ==================================================================================================
 """
     print(diagram)
@@ -93,6 +116,8 @@ def main():
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     train_file = os.path.join(base_dir, "data", "historical_transactions.csv")
+    live_file = os.path.join(base_dir, "data", "streaming_incoming_txns.csv")
+    output_dir = os.path.join(base_dir, "output")
 
     # -------------------------------------------------------------------------
     # STEP 1: Data Ingestion (Bronze Layer)
@@ -106,12 +131,16 @@ def main():
     )
 
     print(f"Loaded Bronze historical training transactions: {bronze_train.count()} records")
+    bronze_train.show(5, truncate=False)
 
     # -------------------------------------------------------------------------
     # STEP 2: Spark Preprocessing & Feature Engineering (Silver Layer)
     # -------------------------------------------------------------------------
     print_step(2, "Feature Engineering & Silver Layer Transformation")
 
+    # Engineered Features:
+    # 1. amount_to_avg_ratio: How much higher is this txn compared to customer's 30-day baseline?
+    # 2. velocity_risk_score: Interaction between rapid transactions and abnormal distance
     silver_df = (
         bronze_train.withColumn(
             "amount_to_avg_ratio",
@@ -123,17 +152,30 @@ def main():
         )
     )
 
+    print("Engineered Behavioral Feature Samples (Silver Layer):")
+    silver_df.select(
+        "txn_id",
+        "amount",
+        "avg_amount_30d",
+        "amount_to_avg_ratio",
+        "distance_from_home_km",
+        "velocity_risk_score",
+        "is_fraud",
+    ).show(5, truncate=False)
+
     # -------------------------------------------------------------------------
     # STEP 3: Distributed MLlib Pipeline Setup
     # -------------------------------------------------------------------------
     print_step(3, "Configuring Distributed PySpark ML Pipeline")
 
+    # 1. Encode Categorical Variable
     indexer = StringIndexer(
         inputCol="merchant_category",
         outputCol="merchant_cat_index",
         handleInvalid="keep",
     )
 
+    # 2. Assemble Features into Dense Vector
     feature_cols = [
         "amount",
         "merchant_cat_index",
@@ -145,10 +187,12 @@ def main():
     ]
     assembler = VectorAssembler(inputCols=feature_cols, outputCol="raw_features")
 
+    # 3. Standardize Features
     scaler = StandardScaler(
         inputCol="raw_features", outputCol="features", withStd=True, withMean=True
     )
 
+    # 4. Distributed Classifier
     rf_classifier = RandomForestClassifier(
         labelCol="is_fraud",
         featuresCol="features",
@@ -158,6 +202,7 @@ def main():
     )
 
     pipeline = Pipeline(stages=[indexer, assembler, scaler, rf_classifier])
+    print("✅ Pipeline Stages defined: StringIndexer -> VectorAssembler -> StandardScaler -> RandomForest")
 
     # -------------------------------------------------------------------------
     # STEP 4: Model Training & Evaluation
@@ -179,6 +224,7 @@ def main():
     print(f"\n🎯 Model Evaluation Metric - ROC AUC: {roc_auc:.4f}")
 
     print("\nSample Test Set Predictions & Probabilities:")
+    # Extract probability of fraud (class 1) using native vector_to_array
     test_eval_view = test_predictions.withColumn(
         "fraud_probability", _round(vector_to_array(col("probability"))[1], 4)
     )
@@ -187,7 +233,90 @@ def main():
         "txn_id", "amount", "is_fraud", "prediction", "fraud_probability"
     ).show(truncate=False)
 
+    # -------------------------------------------------------------------------
+    # STEP 5: Real-Time Serving & Decision Engine (Gold Layer)
+    # -------------------------------------------------------------------------
+    print_step(5, "Deploying Real-Time Decisioning Engine (Gold Layer)")
+
+    # Ingest streaming incoming live transactions
+    streaming_raw = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(live_file)
+    )
+
+    # Apply silver transformations to live stream
+    streaming_silver = (
+        streaming_raw.withColumn(
+            "amount_to_avg_ratio",
+            _round(col("amount") / col("avg_amount_30d"), 2),
+        )
+        .withColumn(
+            "velocity_risk_score",
+            _round(col("txns_last_24h") * (col("distance_from_home_km") / 100.0), 2),
+        )
+    )
+
+    # Score live stream with the trained model
+    live_scores = trained_model.transform(streaming_silver)
+    live_scored_view = live_scores.withColumn(
+        "fraud_risk_score", _round(vector_to_array(col("probability"))[1], 4)
+    ).withColumn(
+        "automated_action",
+        when(col("fraud_risk_score") >= 0.70, lit("🚫 DECLINE & BLOCK"))
+        .when(col("fraud_risk_score") >= 0.40, lit("⚠️ STEP-UP OTP CHALLENGE"))
+        .otherwise(lit("✅ APPROVE")),
+    )
+
+    print("--- ⚡ Real-Time Live Stream Decision Engine Output ---")
+    live_scored_view.select(
+        "txn_id",
+        "customer_id",
+        "merchant_category",
+        "amount",
+        "fraud_risk_score",
+        "automated_action",
+    ).show(truncate=False)
+
+    # -------------------------------------------------------------------------
+    # STEP 6: Continuous Monitoring, Drift & Closed-Loop Feedback
+    # -------------------------------------------------------------------------
+    print_step(6, "Continuous Monitoring & Feedback Loop Design")
+
+    monitoring_summary = """
+[FEEDBACK & RE-TRAINING ARCHITECTURE]
+1. Concept Drift Monitoring:
+   - Evaluates Population Stability Index (PSI) and Kolmogorov-Smirnov (KS) statistic
+     daily between production inference features vs training feature distributions.
+2. Ground-Truth Chargeback Ingestion:
+   - When banks receive 30-day customer dispute chargebacks, labels are automatically
+     reconciled with original transaction records.
+3. Automated Retraining Trigger:
+   - When Model F1-Score or ROC AUC drops below 0.85 OR PSI > 0.25, Airflow/Kubeflow
+     automatically triggers the PySpark re-training pipeline and registers a candidate
+     model in MLflow Model Registry for canary deployment.
+"""
+    print(monitoring_summary)
+
+    # -------------------------------------------------------------------------
+    # STEP 7: Export Gold Decision Output
+    # -------------------------------------------------------------------------
+    print_step(7, "Exporting Gold Layer Risk Scores & Reports")
+    os.makedirs(output_dir, exist_ok=True)
+    gold_out = os.path.join(output_dir, "real_time_fraud_decisions")
+    live_scored_view.select(
+        "txn_id",
+        "customer_id",
+        "merchant_category",
+        "amount",
+        "fraud_risk_score",
+        "automated_action",
+    ).coalesce(1).write.mode("overwrite").option("header", "true").csv(gold_out)
+
+    print(f"✅ Gold Decision Records successfully saved to: {gold_out}\n")
+
     spark.stop()
+    print_banner("COMPLETE DATA SCIENCE PROJECT ARCHITECTURE EXECUTION SUCCESSFUL")
 
 
 if __name__ == "__main__":
