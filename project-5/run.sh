@@ -1,0 +1,33 @@
+#!/bin/bash
+# Runner script for Project 5: Complete Data Science Project Architecture Design
+set -e
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
+# 1. Check virtual environment
+if [ -f "../.venv/bin/activate" ]; then
+    source ../.venv/bin/activate
+elif [ -f "./.venv/bin/activate" ]; then
+    source ./.venv/bin/activate
+fi
+
+# 2. Select python interpreter with pyspark
+if [ -f "/opt/anaconda3/envs/spark_env/bin/python" ]; then
+    PY_CMD="/opt/anaconda3/envs/spark_env/bin/python"
+elif command -v python3 >/dev/null 2>&1 && python3 -c "import pyspark" >/dev/null 2>&1; then
+    PY_CMD="python3"
+elif [ -f "/opt/anaconda3/bin/python" ]; then
+    PY_CMD="/opt/anaconda3/bin/python"
+else
+    PY_CMD="python3"
+fi
+
+export PYSPARK_PYTHON="$PY_CMD"
+export PYSPARK_DRIVER_PYTHON="$PY_CMD"
+
+echo "=========================================================================="
+echo "Running Project 5: Data Science Architecture Design (23BTRDC002)"
+echo "Using interpreter: $PY_CMD"
+echo "=========================================================================="
+$PY_CMD main.py

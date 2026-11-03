@@ -1,0 +1,6 @@
+txn_id,customer_id,merchant_category,amount,fraud_risk_score,automated_action
+LIVE_901,C101,Grocery,38.0,0.0,✅ APPROVE
+LIVE_902,C102,Jewelry,1850.0,1.0,🚫 DECLINE & BLOCK
+LIVE_903,C104,Dining,22.5,0.0,✅ APPROVE
+LIVE_904,C106,Electronics,3400.0,1.0,🚫 DECLINE & BLOCK
+LIVE_905,C108,Clothing,72.0,0.0,✅ APPROVE
